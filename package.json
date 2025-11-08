@@ -4,7 +4,7 @@
   },
   "scripts": {
     "start": "npm-run-all --parallel server live",
-    "server": "five-server --port=8080 --open=index.html",
+    "server": "five-server --port=8080 --open=index.php",
     "live": "browser-sync start --proxy \"localhost:8080\" --files \"**/*.{php,html,css,js}\" --no-notify"
   },
   "devDependencies": {
