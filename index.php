@@ -3,6 +3,7 @@
 $img_dir = __DIR__ . '/full/';
 $thumbnail_dir = __DIR__ . '/thumbnails/';
 
-echo "Hello world!";
-echo "Good morning World!"
+echo "Hello world!\n";
+echo "Good morning World!\n";
+echo "Dr.Stone\n"
 ?>
