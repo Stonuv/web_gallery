@@ -3,38 +3,35 @@
 $fullDir       = 'full/';
 $thumbnailsDir = 'thumbnails/';
 $metadataFile  = 'data/metadata.json';
-$allowedExts   = ['jpg', 'jpeg', 'png', 'gif'];
-$maxFileSize   = 5 * 1024 * 1024; // 5 МБ допустимый размер
+$allowedExts   = ['jpg','jpeg','png','gif'];
+$maxFileSize   = 5 * 1024 * 1024; // 5 МБ
 $fontFile      = __DIR__ . '/fonts/ARIAL.TTF';
+
 if (!file_exists($fontFile)) {
     die('Ошибка: файл шрифта не найден: ' . $fontFile);
 }
 
+/**
+ * Санитизация имени файла: оставляем только буквы, цифры, подчёркивания и дефисы.
+ */
 function sanitizeFileName($name) {
-    // удаляем любые символы кроме букв, чисел, подчёркивания, дефиса
     $clean = preg_replace('/[^A-Za-z0-9_\-]/', '_', $name);
-    // можно дополнительно удалить ведущие/концевые подчёркивания
     $clean = trim($clean, '_');
     return $clean === '' ? 'file' : $clean;
 }
 
 /**
- * Функция создания миниатюры с наложением текста (дата/время)
+ * Создаёт миниатюру изображения нужной ширины и накладывает текст (например, дата/время).
+ *
+ * @param string $srcPath     путь к исходному изображению
+ * @param string $destPath    путь, куда сохранить миниатюру
+ * @param int    $thumbWidth  желаемая ширина миниатюры (px)
+ * @param string $text        текст для наложения
+ * @param string $fontFile    путь к шрифту .ttf
+ * @return bool              true при успехе, false при ошибке
  */
-function createThumbnailWithDateText($srcPath, $destPath, $thumbWidth, $text, $fontFile)
-{
+function createThumbnailWithDateText($srcPath, $destPath, $thumbWidth, $text, $fontFile) {
     $ext = strtolower(pathinfo($srcPath, PATHINFO_EXTENSION));
-
-    $userName  = trim($_POST['custom_name'] ?? '');
-    if ($userName !== '') {
-        // безопасное имя: удалить/заменить нежелательные символы
-        $baseName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $userName);
-    } else {
-        // если не введено — использовать оригинальное имя без расширения
-        $baseName = pathinfo($fileName, PATHINFO_FILENAME);
-    }
-    // формируем новое имя с расширением:
-    $newFileName = $baseName . '.' . $ext;
 
     switch ($ext) {
         case 'jpg':
@@ -55,31 +52,23 @@ function createThumbnailWithDateText($srcPath, $destPath, $thumbWidth, $text, $f
     $origW = imagesx($srcImg);
     $origH = imagesy($srcImg);
 
-    // Вычисляем пропорции
     $thumbW = $thumbWidth;
     $thumbH = (int) round($origH * ($thumbWidth / $origW));
 
     $thumbImg = imagecreatetruecolor($thumbW, $thumbH);
 
-    // Если PNG или GIF — сохраняем прозрачность
-    if (in_array($ext, ['png', 'gif'])) {
+    if (in_array($ext, ['png','gif'])) {
         imagecolortransparent($thumbImg, imagecolorallocatealpha($thumbImg, 0, 0, 0, 127));
         imagealphablending($thumbImg, false);
         imagesavealpha($thumbImg, true);
     }
 
-    // Масштабирование
     imagecopyresampled(
         $thumbImg,
         $srcImg,
-        0,
-        0,
-        0,
-        0,
-        $thumbW,
-        $thumbH,
-        $origW,
-        $origH
+        0, 0, 0, 0,
+        $thumbW, $thumbH,
+        $origW, $origH
     );
 
     // Наложение текста
@@ -87,7 +76,7 @@ function createThumbnailWithDateText($srcPath, $destPath, $thumbWidth, $text, $f
     $angle      = 0;
     $padding    = 5;
     $textColor   = imagecolorallocate($thumbImg,   255, 255, 255); // белый
-    $shadowColor = imagecolorallocate($thumbImg,     0,   0,   0); // черная тень
+    $shadowColor = imagecolorallocate($thumbImg,     0,   0,   0);   // чёрная тень
 
     $box = imagettfbbox($fontSize, $angle, $fontFile, $text);
     $textW = abs($box[4] - $box[0]);
@@ -96,12 +85,9 @@ function createThumbnailWithDateText($srcPath, $destPath, $thumbWidth, $text, $f
     $x = $thumbW - $textW - $padding;
     $y = $thumbH - $padding;
 
-    // Рисуем тень
-    imagettftext($thumbImg, $fontSize, $angle, $x + 1, $y + 1, $shadowColor, $fontFile, $text);
-    // Рисуем сам текст
+    imagettftext($thumbImg, $fontSize, $angle, $x+1, $y+1, $shadowColor, $fontFile, $text);
     imagettftext($thumbImg, $fontSize, $angle, $x,   $y,   $textColor,   $fontFile, $text);
 
-    // Сохраняем файл миниатюры
     switch ($ext) {
         case 'jpg':
         case 'jpeg':
@@ -128,51 +114,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $fileTmp  = $_FILES['image']['tmp_name'];
-    $fileName = basename($_FILES['image']['name']);
-    $ext      = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+    $origName = basename($_FILES['image']['name']);
+    $ext      = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
 
     if (!in_array($ext, $allowedExts)) {
         die('Ошибка: допустимые типы файлов: ' . implode(', ', $allowedExts));
     }
-
     $imgInfo = getimagesize($fileTmp);
     if ($imgInfo === false) {
         die('Ошибка: файл не является изображением.');
     }
-
     if ($_FILES['image']['size'] > $maxFileSize) {
         die('Ошибка: файл слишком большой.');
     }
 
-    $targetPath = $fullDir . $newFileName;
-    $fileName   = $newFileName;
+    // Обработка пользовательского имени файла
+    $userName = trim($_POST['custom_name'] ?? '');
+    if ($userName !== '') {
+        $baseName = sanitizeFileName($userName);
+    } else {
+        $baseName = pathinfo($origName, PATHINFO_FILENAME);
+        $baseName = sanitizeFileName($baseName);
+    }
+    $fileName   = $baseName . '.' . $ext;
+    $targetPath = $fullDir . $fileName;
+
+    // Проверка на дубликат
     if (file_exists($targetPath)) {
-        $baseName = pathinfo($fileName, PATHINFO_FILENAME);
-        $i        = 1;
+        $i = 1;
         do {
-            $newName   = $baseName . '_' . $i . '.' . $ext;
-            $targetPath = $fullDir . $newName;
+            $fileName = $baseName . '_' . $i . '.' . $ext;
+            $targetPath = $fullDir . $fileName;
             $i++;
         } while (file_exists($targetPath));
-        $fileName = $newName;
     }
 
     if (!move_uploaded_file($fileTmp, $targetPath)) {
         die('Ошибка: не удалось сохранить загруженный файл.');
     }
 
-    // Создаём миниатюру с текстом даты загрузки
+    // Создаём миниатюру и записываем метаданные
     $thumbFilePath = $thumbnailsDir . $fileName;
     $dateTimeText  = date('Y-m-d H:i:s');
-    if (! createThumbnailWithDateText($targetPath, $thumbFilePath, 300, $dateTimeText, $fontFile)) {
+    if (! createThumbnailWithDateText($targetPath, $thumbFilePath, 300, $dateTimeText, $fontFile) ) {
         error_log("Ошибка: не удалось создать миниатюру для {$fileName}");
     }
 
-    // Обновляем метаданные
+    // Запись метаданных
     $record = [
         'filename' => $fileName,
         'thumb'    => $thumbFilePath,
-        'full'     => $fullDir . $fileName,
+        'full'     => $targetPath,
         'desc'     => htmlspecialchars(trim($_POST['description'] ?? ''), ENT_QUOTES, 'UTF-8'),
         'uploaded' => $dateTimeText,
         'tags'     => []
@@ -190,7 +182,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!is_array($data)) {
         $data = [];
     }
-
     $data[] = $record;
     file_put_contents($metadataFile, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
@@ -202,34 +193,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
     <meta charset="UTF-8">
-    <title>Загрузка изображения</title>
+    <title>Загрузить изображение</title>
 </head>
-
 <body>
-    <h1>Загрузить изображение</h1>
-    <form action="" method="post" enctype="multipart/form-data">
-        <div>
-            <label>Выберите файл изображения:<br>
-                <input type="file" name="image" accept="image/*" required>
-            </label>
-        </div>
-        <div>
-            <label>Введите желаемое имя файла:<br>
-                <input type="text" name="custom_name" maxlength="64">
-            </label>
-        </div>
-        <div>
-            <label>Описание (необязательно):<br>
-                <textarea name="description" rows="4" cols="50"></textarea>
-            </label>
-        </div>
-        <div>
-            <button type="submit">Загрузить</button>
-        </div>
-    </form>
+<h1>Загрузить изображение</h1>
+<form action="" method="post" enctype="multipart/form-data">
+    <div>
+        <label>Выберите файл изображения:<br>
+            <input type="file" name="image" accept="image/*" required>
+        </label>
+    </div>
+    <div>
+        <label>Желаемое имя файла (без расширения):<br>
+            <input type="text" name="custom_name" maxlength="64">
+        </label>
+    </div>
+    <div>
+        <label>Описание (необязательно):<br>
+            <textarea name="description" rows="4" cols="50"></textarea>
+        </label>
+    </div>
+    <div>
+        <button type="submit">Загрузить</button>
+    </div>
+</form>
 </body>
-
 </html>
