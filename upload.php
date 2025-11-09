@@ -56,7 +56,7 @@ function createThumbnailWithDateText($srcPath, $destPath, $thumbWidth, $text, $f
                        $origW, $origH);
 
     // Наложение текста
-    $fontSize   = 10;
+    $fontSize   = 14;
     $angle      = 0;
     $padding    = 5;
     $textColor   = imagecolorallocate($thumbImg,   255, 255, 255); // белый
@@ -184,6 +184,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div>
             <label>Выберите файл изображения:<br>
                 <input type="file" name="image" accept="image/*" required>
+            </label>
+        </div>
+        <div>
+            <label>Введите желаемое имя файла:<br>
+                <input type="text" name="custom_name" maxlength="64">
             </label>
         </div>
         <div>
