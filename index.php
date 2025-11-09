@@ -27,18 +27,25 @@ if (!file_exists($metadataFile)) {
 
 // === СБОР СПИСКА ИЗОБРАЖЕНИЙ ===
 $images = [];
-$files = scandir($thumbnailsDir);
-foreach ($files as $file) {
-    if ($file === '.' || $file === '..') continue;
-    $ext = pathinfo($file, PATHINFO_EXTENSION);
-    if (in_array(strtolower($ext), ['jpg', 'jpeg', 'png', 'gif'])) {
-        $basename = pathinfo($file, PATHINFO_FILENAME);
-        $descFile = $descDir . $basename . '.txt';
-        $description = file_exists($descFile) ? file_get_contents($descFile) : 'Без описания';
+
+if (file_exists($metadataFile)) {
+    $json = file_get_contents($metadataFile);
+    $imagesData = json_decode($json, true);
+    if (!is_array($imagesData)) {
+        $imagesData = [];
+    }
+} else {
+    $imagesData = [];
+}
+
+// Если хочешь — можно дополнительно отфильтровать те элементы, у которых существуют миниатюры
+foreach ($imagesData as $item) {
+    // Можно проверить: файл thumb существует, full существует, расширение корректное
+    if (isset($item['thumb'], $item['full'], $item['desc'])) {
         $images[] = [
-            'thumb' => $thumbnailsDir . $file,
-            'full' => $fullDir . $file,
-            'desc' => htmlspecialchars($description, ENT_QUOTES, 'UTF-8')
+            'thumb' => $item['thumb'],
+            'full'  => $item['full'],
+            'desc'  => htmlspecialchars($item['desc'], ENT_QUOTES, 'UTF-8')
         ];
     }
 }
@@ -161,7 +168,7 @@ if (empty($imagesOnPage) && $totalImages > 0) {
 </head>
 <body>
 
-<h1>Моя фото-галерея</h1>
+<h1>Типа Пинтерест</h1>
 
 <div style="background:#ffebee; padding:10px; text-align:center; margin-bottom:20px; color:#c62828; font-weight:bold;">
     Всего изображений: <?= $totalImages ?> | 
