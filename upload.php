@@ -3,20 +3,39 @@
 $fullDir       = 'full/';
 $thumbnailsDir = 'thumbnails/';
 $metadataFile  = 'data/metadata.json';
-$allowedExts   = ['jpg','jpeg','png','gif'];
+$allowedExts   = ['jpg', 'jpeg', 'png', 'gif'];
 $maxFileSize   = 5 * 1024 * 1024; // 5 МБ допустимый размер
-
-// Путь к файлу шрифта TTF (например Arial)
-$fontFile      = __DIR__ . '/fonts/ARIAL.TTF';  
+$fontFile      = __DIR__ . '/fonts/ARIAL.TTF';
 if (!file_exists($fontFile)) {
     die('Ошибка: файл шрифта не найден: ' . $fontFile);
+}
+
+function sanitizeFileName($name) {
+    // удаляем любые символы кроме букв, чисел, подчёркивания, дефиса
+    $clean = preg_replace('/[^A-Za-z0-9_\-]/', '_', $name);
+    // можно дополнительно удалить ведущие/концевые подчёркивания
+    $clean = trim($clean, '_');
+    return $clean === '' ? 'file' : $clean;
 }
 
 /**
  * Функция создания миниатюры с наложением текста (дата/время)
  */
-function createThumbnailWithDateText($srcPath, $destPath, $thumbWidth, $text, $fontFile) {
+function createThumbnailWithDateText($srcPath, $destPath, $thumbWidth, $text, $fontFile)
+{
     $ext = strtolower(pathinfo($srcPath, PATHINFO_EXTENSION));
+
+    $userName  = trim($_POST['custom_name'] ?? '');
+    if ($userName !== '') {
+        // безопасное имя: удалить/заменить нежелательные символы
+        $baseName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $userName);
+    } else {
+        // если не введено — использовать оригинальное имя без расширения
+        $baseName = pathinfo($fileName, PATHINFO_FILENAME);
+    }
+    // формируем новое имя с расширением:
+    $newFileName = $baseName . '.' . $ext;
+
     switch ($ext) {
         case 'jpg':
         case 'jpeg':
@@ -43,17 +62,25 @@ function createThumbnailWithDateText($srcPath, $destPath, $thumbWidth, $text, $f
     $thumbImg = imagecreatetruecolor($thumbW, $thumbH);
 
     // Если PNG или GIF — сохраняем прозрачность
-    if (in_array($ext, ['png','gif'])) {
+    if (in_array($ext, ['png', 'gif'])) {
         imagecolortransparent($thumbImg, imagecolorallocatealpha($thumbImg, 0, 0, 0, 127));
         imagealphablending($thumbImg, false);
         imagesavealpha($thumbImg, true);
     }
 
     // Масштабирование
-    imagecopyresampled($thumbImg, $srcImg,
-                       0, 0, 0, 0,
-                       $thumbW, $thumbH,
-                       $origW, $origH);
+    imagecopyresampled(
+        $thumbImg,
+        $srcImg,
+        0,
+        0,
+        0,
+        0,
+        $thumbW,
+        $thumbH,
+        $origW,
+        $origH
+    );
 
     // Наложение текста
     $fontSize   = 14;
@@ -70,7 +97,7 @@ function createThumbnailWithDateText($srcPath, $destPath, $thumbWidth, $text, $f
     $y = $thumbH - $padding;
 
     // Рисуем тень
-    imagettftext($thumbImg, $fontSize, $angle, $x+1, $y+1, $shadowColor, $fontFile, $text);
+    imagettftext($thumbImg, $fontSize, $angle, $x + 1, $y + 1, $shadowColor, $fontFile, $text);
     // Рисуем сам текст
     imagettftext($thumbImg, $fontSize, $angle, $x,   $y,   $textColor,   $fontFile, $text);
 
@@ -117,7 +144,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         die('Ошибка: файл слишком большой.');
     }
 
-    $targetPath = $fullDir . $fileName;
+    $targetPath = $fullDir . $newFileName;
+    $fileName   = $newFileName;
     if (file_exists($targetPath)) {
         $baseName = pathinfo($fileName, PATHINFO_FILENAME);
         $i        = 1;
@@ -136,7 +164,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Создаём миниатюру с текстом даты загрузки
     $thumbFilePath = $thumbnailsDir . $fileName;
     $dateTimeText  = date('Y-m-d H:i:s');
-    if (! createThumbnailWithDateText($targetPath, $thumbFilePath, 300, $dateTimeText, $fontFile) ) {
+    if (! createThumbnailWithDateText($targetPath, $thumbFilePath, 300, $dateTimeText, $fontFile)) {
         error_log("Ошибка: не удалось создать миниатюру для {$fileName}");
     }
 
@@ -174,10 +202,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <title>Загрузка изображения</title>
 </head>
+
 <body>
     <h1>Загрузить изображение</h1>
     <form action="" method="post" enctype="multipart/form-data">
@@ -201,4 +231,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </form>
 </body>
+
 </html>
