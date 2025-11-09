@@ -44,19 +44,6 @@ $totalPages  = ($imagesPerPage > 0)
 // Получаем текущую страницу из GET-параметра
 $page = 1;
 
-// —– БЛОК ОТЛАДКИ —–
-echo '<pre style="background:#eef; padding:10px; border:1px solid #99a;">';
-echo "DEBUG: \$_GET = ";
-var_dump($_GET);
-echo "DEBUG: raw page param = ";
-if (isset($_GET['page'])) {
-    var_dump($_GET['page']);
-} else {
-    echo "not set\n";
-}
-echo '</pre>';
-// —– конец блока отладки —–
-
 if (isset($_GET['page']) && is_numeric($_GET['page'])) {
     $page = (int)$_GET['page'];
 }
