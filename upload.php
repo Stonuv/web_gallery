@@ -1,38 +1,36 @@
 <?php
 // === КОНФИГУРАЦИЯ ===
-$fullDir       = 'full/';
-$thumbnailsDir = 'thumbnails/';
-$metadataFile  = 'data/metadata.json';
-$allowedExts   = ['jpg','jpeg','png','gif'];
-$maxFileSize   = 5 * 1024 * 1024; // 5 МБ
-$fontFile      = __DIR__ . '/fonts/ARIAL.TTF';
+$fullDir        = 'full/';
+$thumbnailsDir  = 'thumbnails/';
+$metadataFile   = 'data/metadata.json';
+$allowedExts    = ['jpg', 'jpeg', 'png', 'gif'];
+$maxFileSize    = 5 * 1024 * 1024; // 5 МБ
+$fontFile       = __DIR__ . '/fonts/ARIAL.TTF';
+$watermarkFile  = __DIR__ . '/watermark/watermark.png'; // путь к файлу водяного знака
 
 if (!file_exists($fontFile)) {
     die('Ошибка: файл шрифта не найден: ' . $fontFile);
 }
+if (!file_exists($watermarkFile)) {
+    die('Ошибка: файл водяного знака не найден: ' . $watermarkFile);
+}
 
 /**
- * Санитизация имени файла: оставляем только буквы, цифры, подчёркивания и дефисы.
+ * Санитизация имени файла (удаляем нежелательные символы)
  */
-function sanitizeFileName($name) {
+function sanitizeFileName($name)
+{
     $clean = preg_replace('/[^A-Za-z0-9_\-]/', '_', $name);
     $clean = trim($clean, '_');
     return $clean === '' ? 'file' : $clean;
 }
 
 /**
- * Создаёт миниатюру изображения нужной ширины и накладывает текст (например, дата/время).
- *
- * @param string $srcPath     путь к исходному изображению
- * @param string $destPath    путь, куда сохранить миниатюру
- * @param int    $thumbWidth  желаемая ширина миниатюры (px)
- * @param string $text        текст для наложения
- * @param string $fontFile    путь к шрифту .ttf
- * @return bool              true при успехе, false при ошибке
+ * Создаёт миниатюру изображения и накладывает текст-дату
  */
-function createThumbnailWithDateText($srcPath, $destPath, $thumbWidth, $text, $fontFile) {
+function createThumbnailWithDateText($srcPath, $destPath, $thumbWidth, $text, $fontFile)
+{
     $ext = strtolower(pathinfo($srcPath, PATHINFO_EXTENSION));
-
     switch ($ext) {
         case 'jpg':
         case 'jpeg':
@@ -56,8 +54,7 @@ function createThumbnailWithDateText($srcPath, $destPath, $thumbWidth, $text, $f
     $thumbH = (int) round($origH * ($thumbWidth / $origW));
 
     $thumbImg = imagecreatetruecolor($thumbW, $thumbH);
-
-    if (in_array($ext, ['png','gif'])) {
+    if (in_array($ext, ['png', 'gif'])) {
         imagecolortransparent($thumbImg, imagecolorallocatealpha($thumbImg, 0, 0, 0, 127));
         imagealphablending($thumbImg, false);
         imagesavealpha($thumbImg, true);
@@ -66,26 +63,31 @@ function createThumbnailWithDateText($srcPath, $destPath, $thumbWidth, $text, $f
     imagecopyresampled(
         $thumbImg,
         $srcImg,
-        0, 0, 0, 0,
-        $thumbW, $thumbH,
-        $origW, $origH
+        0,
+        0,
+        0,
+        0,
+        $thumbW,
+        $thumbH,
+        $origW,
+        $origH
     );
 
-    // Наложение текста
+    // наложение текста
     $fontSize   = 14;
     $angle      = 0;
     $padding    = 5;
-    $textColor   = imagecolorallocate($thumbImg,   255, 255, 255); // белый
-    $shadowColor = imagecolorallocate($thumbImg,     0,   0,   0);   // чёрная тень
+    $textColor   = imagecolorallocate($thumbImg,   255, 255, 255);
+    $shadowColor = imagecolorallocate($thumbImg,     0,  0,  0);
 
-    $box = imagettfbbox($fontSize, $angle, $fontFile, $text);
+    $box   = imagettfbbox($fontSize, $angle, $fontFile, $text);
     $textW = abs($box[4] - $box[0]);
     $textH = abs($box[5] - $box[1]);
 
     $x = $thumbW - $textW - $padding;
     $y = $thumbH - $padding;
 
-    imagettftext($thumbImg, $fontSize, $angle, $x+1, $y+1, $shadowColor, $fontFile, $text);
+    imagettftext($thumbImg, $fontSize, $angle, $x + 1, $y + 1, $shadowColor, $fontFile, $text);
     imagettftext($thumbImg, $fontSize, $angle, $x,   $y,   $textColor,   $fontFile, $text);
 
     switch ($ext) {
@@ -107,7 +109,131 @@ function createThumbnailWithDateText($srcPath, $destPath, $thumbWidth, $text, $f
     return true;
 }
 
-// Обработка загрузки формы
+/**
+ * Накладывает водяной знак-PNG на изображение
+ */
+function applyWatermarkWithScale($srcPath, $watermarkPath, $destPath, $options = [])
+{
+    // Настройки по умолчанию
+    $defaults = [
+        'scale'    => 0.2,
+        'maxWidth' => null,
+        'position' => 'bottom-right',
+        'margin'   => 10
+    ];
+    $opts = array_merge($defaults, $options);
+
+    if (!file_exists($srcPath) || !file_exists($watermarkPath)) {
+        return false;
+    }
+
+    $ext = strtolower(pathinfo($srcPath, PATHINFO_EXTENSION));
+    switch ($ext) {
+        case 'jpg':
+        case 'jpeg':
+            $img = imagecreatefromjpeg($srcPath);
+            break;
+        case 'png':
+            $img = imagecreatefrompng($srcPath);
+            break;
+        case 'gif':
+            $img = imagecreatefromgif($srcPath);
+            break;
+        default:
+            return false;
+    }
+    if (!$img) return false;
+
+    $wm = imagecreatefrompng($watermarkPath);
+    if (!$wm) {
+        imagedestroy($img);
+        return false;
+    }
+
+    $imgW = imagesx($img);
+    $imgH = imagesy($img);
+    $wmOrigW = imagesx($wm);
+    $wmOrigH = imagesy($wm);
+
+    // Определяем размер знака
+    $targetW = (int)round($imgW * $opts['scale']);
+    if ($opts['maxWidth'] !== null) {
+        $targetW = min($targetW, $opts['maxWidth']);
+    }
+    // вычисляем высоту пропорционально
+    $targetH = (int)round($wmOrigH * ($targetW / $wmOrigW));
+
+    // Создаём промежуточный ресайз водяного знака
+    $wmResized = imagecreatetruecolor($targetW, $targetH);
+    // Сохраняем альфа-канал
+    imagealphablending($wmResized, false);
+    imagesavealpha($wmResized, true);
+    // Копируем с ресемплингом
+    imagecopyresampled(
+        $wmResized,
+        $wm,
+        0,
+        0,
+        0,
+        0,
+        $targetW,
+        $targetH,
+        $wmOrigW,
+        $wmOrigH
+    );
+
+    // Позиционирование
+    switch ($opts['position']) {
+        case 'top-left':
+            $x = $opts['margin'];
+            $y = $opts['margin'];
+            break;
+        case 'top-right':
+            $x = $imgW - $targetW - $opts['margin'];
+            $y = $opts['margin'];
+            break;
+        case 'center':
+            $x = (int)(($imgW - $targetW) / 2);
+            $y = (int)(($imgH - $targetH) / 2);
+            break;
+        case 'bottom-left':
+            $x = $opts['margin'];
+            $y = $imgH - $targetH - $opts['margin'];
+            break;
+        case 'bottom-right':
+        default:
+            $x = $imgW - $targetW - $opts['margin'];
+            $y = $imgH - $targetH - $opts['margin'];
+            break;
+    }
+
+    // Накладываем знак
+    imagealphablending($img, true);
+    imagesavealpha($img, true);
+    imagecopy($img, $wmResized, $x, $y, 0, 0, $targetW, $targetH);
+
+    // Сохраняем результат
+    switch ($ext) {
+        case 'jpg':
+        case 'jpeg':
+            imagejpeg($img, $destPath, 90);
+            break;
+        case 'png':
+            imagepng($img, $destPath);
+            break;
+        case 'gif':
+            imagegif($img, $destPath);
+            break;
+    }
+
+    imagedestroy($img);
+    imagedestroy($wm);
+    imagedestroy($wmResized);
+
+    return true;
+}
+
+// Обработка формы
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
         die('Ошибка: файл не загружен правильно.');
@@ -128,7 +254,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         die('Ошибка: файл слишком большой.');
     }
 
-    // Обработка пользовательского имени файла
+    // Формирование имени
     $userName = trim($_POST['custom_name'] ?? '');
     if ($userName !== '') {
         $baseName = sanitizeFileName($userName);
@@ -143,21 +269,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (file_exists($targetPath)) {
         $i = 1;
         do {
-            $fileName = $baseName . '_' . $i . '.' . $ext;
+            $fileName   = $baseName . '_' . $i . '.' . $ext;
             $targetPath = $fullDir . $fileName;
             $i++;
         } while (file_exists($targetPath));
     }
 
-    if (!move_uploaded_file($fileTmp, $targetPath)) {
-        die('Ошибка: не удалось сохранить загруженный файл.');
+    if (! move_uploaded_file($fileTmp, $targetPath)) {
+        die('Ошибка: не удалось сохранить файл.');
     }
 
-    // Создаём миниатюру и записываем метаданные
+    // Применяем водяной знак к оригиналу
+    applyWatermarkWithScale(
+        $targetPath,
+        $watermarkFile,
+        $targetPath,
+        [
+            'scale'    => 0.5,            // знак будет 15% от ширины изображения
+            'maxWidth' => 500,             // и не шире 200px
+            'position' => 'bottom-right',  // позиция знака
+            'margin'   => 10               // отступ от краёв
+        ]
+    );
+
+    // Создаём миниатюру с датой
     $thumbFilePath = $thumbnailsDir . $fileName;
     $dateTimeText  = date('Y-m-d H:i:s');
-    if (! createThumbnailWithDateText($targetPath, $thumbFilePath, 300, $dateTimeText, $fontFile) ) {
-        error_log("Ошибка: не удалось создать миниатюру для {$fileName}");
+    if (! createThumbnailWithDateText($targetPath, $thumbFilePath, 300, $dateTimeText, $fontFile)) {
+        error_log("Ошибка: миниатюра не создана для {$fileName}");
     }
 
     // Запись метаданных
@@ -170,8 +309,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'tags'     => []
     ];
 
-    if (!file_exists($metadataFile)) {
-        if (!is_dir(dirname($metadataFile))) {
+    if (! file_exists($metadataFile)) {
+        if (! is_dir(dirname($metadataFile))) {
             mkdir(dirname($metadataFile), 0755, true);
         }
         file_put_contents($metadataFile, json_encode([], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
@@ -193,31 +332,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <title>Загрузить изображение</title>
 </head>
+
 <body>
-<h1>Загрузить изображение</h1>
-<form action="" method="post" enctype="multipart/form-data">
-    <div>
-        <label>Выберите файл изображения:<br>
-            <input type="file" name="image" accept="image/*" required>
-        </label>
-    </div>
-    <div>
-        <label>Желаемое имя файла (без расширения):<br>
-            <input type="text" name="custom_name" maxlength="64">
-        </label>
-    </div>
-    <div>
-        <label>Описание (необязательно):<br>
-            <textarea name="description" rows="4" cols="50"></textarea>
-        </label>
-    </div>
-    <div>
-        <button type="submit">Загрузить</button>
-    </div>
-</form>
+    <h1>Загрузить изображение</h1>
+    <form action="" method="post" enctype="multipart/form-data">
+        <div>
+            <label>Выберите файл изображения:<br>
+                <input type="file" name="image" accept="image/*" required>
+            </label>
+        </div>
+        <div>
+            <label>Желаемое имя файла (без расширения):<br>
+                <input type="text" name="custom_name" maxlength="64">
+            </label>
+        </div>
+        <div>
+            <label>Описание (необязательно):<br>
+                <textarea name="description" rows="4" cols="50"></textarea>
+            </label>
+        </div>
+        <div>
+            <button type="submit">Загрузить</button>
+        </div>
+    </form>
 </body>
+
 </html>
