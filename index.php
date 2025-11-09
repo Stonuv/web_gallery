@@ -8,11 +8,21 @@ $imagesPerPage = 6; // ←←← НАСТРОЙКА: сколько изобра
 // === ПАПКИ ===
 $thumbnailsDir = 'thumbnails/';
 $fullDir = 'full/';
-$descDir = 'descriptions/';
+$metadataFile = 'data/metadata.json';
 
 // === УБЕДИМСЯ, ЧТО ПАПКИ СУЩЕСТВУЮТ ===
 if (!is_dir($thumbnailsDir) || !is_dir($fullDir)) {
     die('Ошибка: отсутствуют папки thumbnails/ или full/');
+}
+
+if (!file_exists($metadataFile)) {
+    $images = [];
+} else {
+    $json   = file_get_contents($metadataFile);
+    $images = json_decode($json, true);
+    if (!is_array($images)) {
+        $images = [];
+    }
 }
 
 // === СБОР СПИСКА ИЗОБРАЖЕНИЙ ===
@@ -34,27 +44,17 @@ foreach ($files as $file) {
 }
 
 // Сортировка: новые сверху
-usort($images, fn($a,$b) => filemtime($b['thumb']) <=> filemtime($a['thumb']));
+usort($images, fn($a,$b) => strtotime($b['uploaded']) <=> strtotime($a['uploaded']));
 
 $totalImages = count($images);
-$totalPages  = ($imagesPerPage > 0)
-    ? (int)ceil($totalImages / $imagesPerPage)
-    : 1;
+$totalPages  = ($imagesPerPage > 0) ? (int)ceil($totalImages / $imagesPerPage) : 1;
 
-// Получаем текущую страницу из GET-параметра
 $page = 1;
-
 if (isset($_GET['page']) && is_numeric($_GET['page'])) {
     $page = (int)$_GET['page'];
 }
-if ($page < 1) {
-    $page = 1;
-}
-if ($page > $totalPages) {
-    $page = $totalPages;
-}
+$page = max(1, min($page, $totalPages));
 
-// Вычисляем смещение и отрезок
 $offset       = ($page - 1) * $imagesPerPage;
 $imagesOnPage = array_slice($images, $offset, $imagesPerPage);
 
@@ -168,6 +168,10 @@ if (empty($imagesOnPage) && $totalImages > 0) {
     Страниц: <?= $totalPages ?> | 
     Текущая: <?= $page ?> | 
     Показано на странице: <?= count($imagesOnPage) ?>
+</div>
+
+<div class="upload">
+    <a href="upload.php">Страница загрузки изображений</a>
 </div>
 
 <div class="gallery">
