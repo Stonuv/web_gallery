@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Клиентская пагинация</title>
+  <style>
+    .gallery { display: flex; flex-wrap: wrap; gap: 20px; }
+    .item { width: 200px; text-align: center; }
+    .pagination { margin: 20px; text-align: center; }
+    .pagination button { margin: 0 5px; }
+    .pagination .current { font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<h1>Галерея (клиентская пагинация)</h1>
+<div class="gallery" id="gallery"></div>
+
+<div class="pagination" id="pagination"></div>
+
+<script>
+  // Предположим, у нас массив картинок (thumb + full + desc)
+  const images = [
+    // пример: 
+        { thumb: 'thumbnails/img_1.jpg',
+      full: 'full/img_1.jpg',
+      desc: 'descriptions/img_1.txt' },
+
+    { thumb: 'thumbnails/img_2.jpg',
+      full: 'full/img_2.jpg',
+      desc: 'descriptions/img_2.txt' },
+
+        { thumb: 'thumbnails/img_3.jpg',
+      full: 'full/img_3.jpg',
+      desc: 'descriptions/img_3.txt' },
+
+    { thumb: 'thumbnails/img_4.jpg',
+      full: 'full/img_4.jpg',
+      desc: 'descriptions/img_4.txt' },
+
+        { thumb: 'thumbnails/img_5.jpg',
+      full: 'full/img_5.jpg',
+      desc: 'descriptions/img_5.txt' },
+
+    { thumb: 'thumbnails/img_6.jpg',
+      full: 'full/img_6.jpg',
+      desc: 'descriptions/img_6.txt' },
+
+        { thumb: 'thumbnails/img_7.jpg',
+      full: 'full/img_7.jpg',
+      desc: 'descriptions/img_7.txt' },
+
+    { thumb: 'thumbnails/img_8.jpg',
+      full: 'full/img_8.jpg',
+      desc: 'descriptions/img_8.txt' },
+
+        { thumb: 'thumbnails/img_9.jpg',
+      full: 'full/img_9.jpg',
+      desc: 'descriptions/img_9.txt' },
+
+    { thumb: 'thumbnails/img_10.jpg',
+      full: 'full/img_10.jpg',
+      desc: 'descriptions/img_10.txt' },
+    // … добавь реальные данные …
+  ];
+
+  const itemsPerPage = 6;
+  let currentPage = 1;
+  const totalPages = Math.ceil(images.length / itemsPerPage);
+
+  function renderPage(page) {
+    currentPage = page;
+    const gallery = document.getElementById('gallery');
+    gallery.innerHTML = '';
+
+    const start = (page - 1) * itemsPerPage;
+    const end   = start + itemsPerPage;
+    const pageItems = images.slice(start, end);
+
+    pageItems.forEach(img => {
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.innerHTML = `
+        <img src="${img.thumb}" alt="" style="width:100%;cursor:pointer"
+             onclick="window.open('${img.full}','_blank')">
+        <p>${img.desc}</p>
+      `;
+      gallery.append(div);
+    });
+
+    renderPagination();
+  }
+
+  function renderPagination() {
+    const container = document.getElementById('pagination');
+    container.innerHTML = '';
+
+    if (currentPage > 1) {
+      const btnPrev = document.createElement('button');
+      btnPrev.textContent = '« Предыдущая';
+      btnPrev.onclick   = () => renderPage(currentPage - 1);
+      container.append(btnPrev);
+    }
+
+    for (let i = 1; i <= totalPages; i++) {
+      const btn = document.createElement('button');
+      btn.textContent = i;
+      if (i === currentPage) {
+        btn.className = 'current';
+      } else {
+        btn.onclick = () => renderPage(i);
+      }
+      container.append(btn);
+    }
+
+    if (currentPage < totalPages) {
+      const btnNext = document.createElement('button');
+      btnNext.textContent = 'Следующая »';
+      btnNext.onclick   = () => renderPage(currentPage + 1);
+      container.append(btnNext);
+    }
+  }
+
+  // Инициализация
+  renderPage(1);
+</script>
+</body>
+</html>
