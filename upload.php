@@ -236,8 +236,8 @@ function applyWatermarkWithScale($srcPath, $watermarkPath, $destPath, $options =
 // Обработка формы
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
-        die('Ошибка: файл не загружен правильно.');
-    }
+        die("Ошибка: файл не загружен правильно.\n${var_dump($_FILES['image'])}");
+    } // php.ini - upload max file size
 
     $fileTmp  = $_FILES['image']['tmp_name'];
     $origName = basename($_FILES['image']['name']);
@@ -279,6 +279,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         die('Ошибка: не удалось сохранить файл.');
     }
 
+
+    // Создаём миниатюру с датой
+    $thumbFilePath = $thumbnailsDir . $fileName;
+    $dateTimeText  = date('Y-m-d H:i:s');
+    if (! createThumbnailWithDateText($targetPath, $thumbFilePath, 300, $dateTimeText, $fontFile)) {
+        error_log("Ошибка: миниатюра не создана для {$fileName}");
+    }
+
     // Применяем водяной знак к оригиналу
     applyWatermarkWithScale(
         $targetPath,
@@ -291,13 +299,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'margin'   => 10               // отступ от краёв
         ]
     );
-
-    // Создаём миниатюру с датой
-    $thumbFilePath = $thumbnailsDir . $fileName;
-    $dateTimeText  = date('Y-m-d H:i:s');
-    if (! createThumbnailWithDateText($targetPath, $thumbFilePath, 300, $dateTimeText, $fontFile)) {
-        error_log("Ошибка: миниатюра не создана для {$fileName}");
-    }
 
     // Запись метаданных
     $record = [
@@ -340,6 +341,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <body>
     <h1>Загрузить изображение</h1>
+    <a href="index.php">Вернуться на главную</a>
     <form action="" method="post" enctype="multipart/form-data">
         <div>
             <label>Выберите файл изображения:<br>

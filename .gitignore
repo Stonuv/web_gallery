@@ -2,3 +2,10 @@ package-lock.json
 fiveserver.config.js
 
 **node_modules/
+
+/full/*
+!/full/.gitkeep
+/thumbnails/*
+!/thumbnails/.gitkeep
+/data/*
+!/data/.gitkeep
