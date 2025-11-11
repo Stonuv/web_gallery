@@ -3,7 +3,7 @@
 
 
 // === КОНФИГУРАЦИЯ ===
-$imagesPerPage = 6; // ←←← НАСТРОЙКА: сколько изображений на странице
+$imagesPerPage = 6;
 
 // === ПАПКИ ===
 $thumbnailsDir = 'thumbnails/';
