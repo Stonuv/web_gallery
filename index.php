@@ -87,9 +87,7 @@ if (empty($imagesOnPage) && $totalImages > 0) {
 <main class="site-shell">
     <header class="site-header">
         <div class="header-text">
-            <span class="header-tag">Галерея</span>
-            <h1>Типа Пинтерест</h1>
-            <p>Собираем изображения с описаниями, показываем компактной сеткой и открываем по клику.</p>
+            <h1>Фото-галерея</h1>
         </div>
         <a class="link-inline" href="upload.php">Загрузить новое изображение →</a>
     </header>

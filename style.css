@@ -36,7 +36,6 @@ body.home-page {
 .header-tag {
     display: inline-block;
     padding: 4px 12px;
-    border-radius: 999px;
     font-size: 0.8rem;
     background: #e5e7eb;
     color: #6b7280;
@@ -61,7 +60,6 @@ body.home-page {
     gap: 16px;
     padding: 18px 20px;
     background: #ffffff;
-    border-radius: 16px;
     border: 1px solid #e5e7eb;
     margin-bottom: 32px;
 }
@@ -90,7 +88,6 @@ body.home-page {
     flex-direction: column;
     gap: 12px;
     background: #fff;
-    border-radius: 16px;
     border: 1px solid #e5e7eb;
     padding: 16px;
 }
@@ -144,7 +141,6 @@ body.home-page {
 .pager a,
 .pager span {
     padding: 6px 14px;
-    border-radius: 999px;
     border: 1px solid #d1d5db;
     text-decoration: none;
     color: #111827;
@@ -175,7 +171,8 @@ body.home-page {
     position: relative;
     max-width: 90vw;
     max-height: 90vh;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
     border-radius: 16px;
     background: #fff;
     padding: 12px;
@@ -185,26 +182,27 @@ body.home-page {
     display: block;
     width: auto;
     height: auto;
-    max-width: none;
-    max-height: none;
+    max-width: 100%;
     border-radius: 8px;
-    display: block;
     border: 1px solid #e5e7eb;
 }
 
 .modal-close {
     position: absolute;
-    top: -12px;
-    right: -12px;
+    top: 8px;
+    right: 8px;
     border: none;
-    background: #111827;
+    background: rgba(17, 24, 39, 0.85);
     color: #fff;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    border-radius: 999px;
     cursor: pointer;
     font-size: 18px;
     line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* === Upload Page === */
