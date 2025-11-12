@@ -336,32 +336,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Загрузить изображение</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <h1>Загрузить изображение</h1>
-    <a href="index.php">Вернуться на главную</a>
-    <form action="" method="post" enctype="multipart/form-data">
-        <div>
-            <label>Выберите файл изображения:<br>
-                <input type="file" name="image" accept="image/*" required>
-            </label>
-        </div>
-        <div>
-            <label>Желаемое имя файла (без расширения):<br>
-                <input type="text" name="custom_name" maxlength="64">
-            </label>
-        </div>
-        <div>
-            <label>Описание (необязательно):<br>
-                <textarea name="description" rows="4" cols="50"></textarea>
-            </label>
-        </div>
-        <div>
-            <button type="submit">Загрузить</button>
-        </div>
-    </form>
+    <main class="mx-auto flex min-h-screen max-w-2xl flex-col gap-8 px-4 py-10">
+        <header class="space-y-4 text-center">
+            <p class="text-xs font-semibold uppercase tracking-[0.35em] text-indigo-500">Загрузка</p>
+            <h1 class="text-3xl font-semibold text-slate-900">Добавить новое изображение</h1>
+            <p class="text-base text-slate-500">Укажите файл, при необходимости задайте имя и описание. Водяной знак и миниатюра создаются автоматически.</p>
+            <a href="index.php" class="inline-flex items-center justify-center text-sm font-semibold text-indigo-600 hover:text-indigo-500">← Вернуться в галерею</a>
+        </header>
+
+        <form action="" method="post" enctype="multipart/form-data" class="space-y-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200/80">
+            <div>
+                <label class="block text-sm font-medium text-slate-700">
+                    Выберите файл изображения
+                    <input type="file"
+                           name="image"
+                           accept="image/*"
+                           required
+                           class="mt-2 block w-full rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-200" />
+                </label>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700">
+                    Желаемое имя файла (без расширения)
+                    <input type="text"
+                           name="custom_name"
+                           maxlength="64"
+                           class="mt-2 block w-full rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200" />
+                </label>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700">
+                    Описание (необязательно)
+                    <textarea name="description"
+                              rows="4"
+                              class="mt-2 block w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"></textarea>
+                </label>
+            </div>
+
+            <div class="flex justify-end">
+                <button type="submit" class="btn-primary">Загрузить</button>
+            </div>
+        </form>
+    </main>
 </body>
 
 </html>
