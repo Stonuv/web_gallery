@@ -1,12 +1,12 @@
 <?php
-// === КОНФИГУРАЦИЯ ===
+// Конфиг
 $fullDir        = 'full/';
 $thumbnailsDir  = 'thumbnails/';
 $metadataFile   = 'data/metadata.json';
 $allowedExts    = ['jpg', 'jpeg', 'png'];
 $maxFileSize    = 5 * 1024 * 1024; // 5 МБ
 $fontFile       = __DIR__ . '/fonts/ARIAL.TTF';
-$watermarkFile  = __DIR__ . '/watermark/watermark.png'; // путь к файлу водяного знака
+$watermarkFile  = __DIR__ . '/watermark/watermark.png';
 
 if (!file_exists($fontFile)) {
     die('Ошибка: файл шрифта не найден: ' . $fontFile);
@@ -15,9 +15,8 @@ if (!file_exists($watermarkFile)) {
     die('Ошибка: файл водяного знака не найден: ' . $watermarkFile);
 }
 
-/**
- * Санитизация имени файла (удаляем нежелательные символы)
- */
+// Жостко проходимся по плохим символам в имени файла
+
 function sanitizeFileName($name)
 {
     $clean = preg_replace('/[^A-Za-z0-9_\-]/', '_', $name);
@@ -25,9 +24,9 @@ function sanitizeFileName($name)
     return $clean === '' ? 'file' : $clean;
 }
 
-/**
- * Создаёт миниатюру изображения и накладывает текст-дату
- */
+
+// Создаёт миниатюру изображения и накладывает текст-дату
+
 function createThumbnailWithDateText($srcPath, $destPath, $thumbWidth, $text, $fontFile)
 {
     $ext = strtolower(pathinfo($srcPath, PATHINFO_EXTENSION));
@@ -103,9 +102,9 @@ function createThumbnailWithDateText($srcPath, $destPath, $thumbWidth, $text, $f
     return true;
 }
 
-/**
- * Накладывает водяной знак-PNG на изображение
- */
+
+// Накладывает водяной знак на изображение
+
 function applyWatermarkWithScale($srcPath, $watermarkPath, $destPath, $options = [])
 {
     // Настройки по умолчанию
@@ -224,8 +223,8 @@ function applyWatermarkWithScale($srcPath, $watermarkPath, $destPath, $options =
 // Обработка формы
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
-        die("Ошибка: файл не загружен правильно.\n${var_dump($_FILES['image'])}");
-    } // php.ini - upload max file size
+        die("Ошибка: файл не загружен правильно.");
+    }
 
     $fileTmp  = $_FILES['image']['tmp_name'];
     $origName = basename($_FILES['image']['name']);

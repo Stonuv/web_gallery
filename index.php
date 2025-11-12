@@ -2,15 +2,13 @@
 
 
 
-// === КОНФИГУРАЦИЯ ===
+// Конфиг
 $imagesPerPage = 8;
 
-// === ПАПКИ ===
 $thumbnailsDir = 'thumbnails/';
 $fullDir = 'full/';
 $metadataFile = 'data/metadata.json';
 
-// === УБЕДИМСЯ, ЧТО ПАПКИ СУЩЕСТВУЮТ ===
 if (!is_dir($thumbnailsDir) || !is_dir($fullDir)) {
     die('Ошибка: отсутствуют папки thumbnails/ или full/');
 }
@@ -38,9 +36,7 @@ if (file_exists($metadataFile)) {
     $imagesData = [];
 }
 
-// Если хочешь — можно дополнительно отфильтровать те элементы, у которых существуют миниатюры
 foreach ($imagesData as $item) {
-    // Можно проверить: файл thumb существует, full существует, расширение корректное
     if (isset($item['thumb'], $item['full'], $item['desc'])) {
         $images[] = [
             'thumb' => $item['thumb'],
@@ -65,9 +61,8 @@ $page = max(1, min($page, $totalPages));
 $offset       = ($page - 1) * $imagesPerPage;
 $imagesOnPage = array_slice($images, $offset, $imagesPerPage);
 
-// Дополнительно: если нет изображений или смещение превышает массив, можно сбросить
 if (empty($imagesOnPage) && $totalImages > 0) {
-    // Например, перенаправить на последнюю страницу
+    // Перенаправление на последнюю страницу
     header("Location: ?page=" . $totalPages);
     exit;
 }
