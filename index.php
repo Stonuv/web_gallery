@@ -81,6 +81,7 @@ if (empty($imagesOnPage) && $totalImages > 0) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Фото-галерея</title>
     <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
 </head>
 <body class="home-page">
 <main class="site-shell">
@@ -179,25 +180,5 @@ if (empty($imagesOnPage) && $totalImages > 0) {
     </div>
 </div>
 
-<script>
-    const modal = document.getElementById('imageModal');
-    const modalImage = document.getElementById('modalImage');
-
-    function openModal(src) {
-        modalImage.src = src;
-        modal.classList.add('visible');
-    }
-
-    function closeModal() {
-        modal.classList.remove('visible');
-        modalImage.removeAttribute('src');
-    }
-
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && modal.classList.contains('visible')) {
-            closeModal();
-        }
-    });
-</script>
 </body>
 </html>
