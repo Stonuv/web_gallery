@@ -336,32 +336,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Загрузить изображение</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
-    <h1>Загрузить изображение</h1>
-    <a href="index.php">Вернуться на главную</a>
-    <form action="" method="post" enctype="multipart/form-data">
-        <div>
-            <label>Выберите файл изображения:<br>
-                <input type="file" name="image" accept="image/*" required>
-            </label>
-        </div>
-        <div>
-            <label>Желаемое имя файла (без расширения):<br>
-                <input type="text" name="custom_name" maxlength="64">
-            </label>
-        </div>
-        <div>
-            <label>Описание (необязательно):<br>
-                <textarea name="description" rows="4" cols="50"></textarea>
-            </label>
-        </div>
-        <div>
-            <button type="submit">Загрузить</button>
-        </div>
-    </form>
+<body class="upload-page">
+    <main class="upload-container">
+        <header class="upload-header">
+            <span class="upload-badge">Загрузка</span>
+            <h1>Добавить новое изображение</h1>
+            <p>Выберите файл, при необходимости задайте имя и опишите кадр — миниатюра и водяной знак создаются автоматически.</p>
+            <a href="index.php" class="upload-back-link">← Вернуться в галерею</a>
+        </header>
+
+        <form action="" method="post" enctype="multipart/form-data" class="upload-form">
+            <div class="upload-field">
+                <label class="upload-label" for="image">Выберите файл изображения</label>
+                <input type="file"
+                       id="image"
+                       name="image"
+                       accept="image/*"
+                       required
+                       class="upload-input upload-input-file">
+                <p class="upload-helper">Поддерживаются JPG, PNG, GIF размером до 5 МБ.</p>
+            </div>
+
+            <div class="upload-field">
+                <label class="upload-label" for="custom_name">Желаемое имя файла (без расширения)</label>
+                <input type="text"
+                       id="custom_name"
+                       name="custom_name"
+                       maxlength="64"
+                       class="upload-input">
+            </div>
+
+            <div class="upload-field">
+                <label class="upload-label" for="description">Описание (необязательно)</label>
+                <textarea id="description"
+                          name="description"
+                          rows="4"
+                          class="upload-input upload-textarea"></textarea>
+            </div>
+
+            <div class="upload-actions">
+                <button type="submit" class="upload-submit">Загрузить</button>
+            </div>
+        </form>
+    </main>
 </body>
 
 </html>
