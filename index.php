@@ -3,7 +3,7 @@
 
 
 // === КОНФИГУРАЦИЯ ===
-$imagesPerPage = 6;
+$imagesPerPage = 8;
 
 // === ПАПКИ ===
 $thumbnailsDir = 'thumbnails/';
