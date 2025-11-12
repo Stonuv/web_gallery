@@ -3,7 +3,7 @@
 $fullDir        = 'full/';
 $thumbnailsDir  = 'thumbnails/';
 $metadataFile   = 'data/metadata.json';
-$allowedExts    = ['jpg', 'jpeg', 'png', 'gif'];
+$allowedExts    = ['jpg', 'jpeg', 'png'];
 $maxFileSize    = 5 * 1024 * 1024; // 5 МБ
 $fontFile       = __DIR__ . '/fonts/ARIAL.TTF';
 $watermarkFile  = __DIR__ . '/watermark/watermark.png'; // путь к файлу водяного знака
@@ -39,9 +39,6 @@ function createThumbnailWithDateText($srcPath, $destPath, $thumbWidth, $text, $f
         case 'png':
             $srcImg = imagecreatefrompng($srcPath);
             break;
-        case 'gif':
-            $srcImg = imagecreatefromgif($srcPath);
-            break;
         default:
             return false;
     }
@@ -54,7 +51,7 @@ function createThumbnailWithDateText($srcPath, $destPath, $thumbWidth, $text, $f
     $thumbH = (int) round($origH * ($thumbWidth / $origW));
 
     $thumbImg = imagecreatetruecolor($thumbW, $thumbH);
-    if (in_array($ext, ['png', 'gif'])) {
+    if ($ext === 'png') {
         imagecolortransparent($thumbImg, imagecolorallocatealpha($thumbImg, 0, 0, 0, 127));
         imagealphablending($thumbImg, false);
         imagesavealpha($thumbImg, true);
@@ -98,9 +95,6 @@ function createThumbnailWithDateText($srcPath, $destPath, $thumbWidth, $text, $f
         case 'png':
             imagepng($thumbImg, $destPath);
             break;
-        case 'gif':
-            imagegif($thumbImg, $destPath);
-            break;
     }
 
     imagedestroy($srcImg);
@@ -135,9 +129,6 @@ function applyWatermarkWithScale($srcPath, $watermarkPath, $destPath, $options =
             break;
         case 'png':
             $img = imagecreatefrompng($srcPath);
-            break;
-        case 'gif':
-            $img = imagecreatefromgif($srcPath);
             break;
         default:
             return false;
@@ -221,9 +212,6 @@ function applyWatermarkWithScale($srcPath, $watermarkPath, $destPath, $options =
         case 'png':
             imagepng($img, $destPath);
             break;
-        case 'gif':
-            imagegif($img, $destPath);
-            break;
     }
 
     imagedestroy($img);
@@ -293,8 +281,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $watermarkFile,
         $targetPath,
         [
-            'scale'    => 0.5,            // знак будет 15% от ширины изображения
-            'maxWidth' => 500,             // и не шире 200px
+            'scale'    => 0.2,            // знак будет 20% от ширины изображения
+            'maxWidth' => 300,             // и не шире 300px
             'position' => 'bottom-right',  // позиция знака
             'margin'   => 10               // отступ от краёв
         ]
@@ -359,7 +347,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                        accept="image/*"
                        required
                        class="upload-input upload-input-file">
-                <p class="upload-helper">Поддерживаются JPG, PNG, GIF размером до 5 МБ.</p>
+                <p class="upload-helper">Поддерживаются JPG и PNG размером до 5 МБ.</p>
             </div>
 
             <div class="upload-field">
