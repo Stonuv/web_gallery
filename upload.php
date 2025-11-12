@@ -345,9 +345,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body class="upload-page">
     <main class="upload-container">
         <header class="upload-header">
-            <span class="upload-badge">Загрузка</span>
             <h1>Добавить новое изображение</h1>
-            <p>Выберите файл, при необходимости задайте имя и опишите кадр — миниатюра и водяной знак создаются автоматически.</p>
+            <p>Выберите файл, при необходимости задайте имя и задайте описание</p>
             <a href="index.php" class="upload-back-link">← Вернуться в галерею</a>
         </header>
 

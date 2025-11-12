@@ -172,8 +172,11 @@ if (empty($imagesOnPage) && $totalImages > 0) {
 </main>
 
 <div id="imageModal" class="modal" role="dialog" aria-modal="true" onclick="closeModal()">
+    <button type="button"
+            class="modal-close"
+            aria-label="Закрыть"
+            onclick="event.stopPropagation(); closeModal();">×</button>
     <div class="modal-inner" onclick="event.stopPropagation()">
-        <button type="button" class="modal-close" aria-label="Закрыть" onclick="closeModal()">×</button>
         <img id="modalImage" src="" alt="Просмотр">
     </div>
 </div>
